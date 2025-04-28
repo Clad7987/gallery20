@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gallery with Lazy Loading</title>
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+
+  <style>
+    /* Animação suave ao carregar */
+    img.lazy {
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    img.loaded {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container my-4">
+    <div class="row g-3" id="imgs"></div>
+  </div>
+
+  <script>
+    // Função para inicializar o IntersectionObserver
+    const lazyLoad = (target) => {
+      const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            img.src = img.dataset.src;
+
+            if (img.dataset.srcset) {
+              img.srcset = img.dataset.srcset;
+            }
+
+            img.classList.remove('lazy');
+            img.classList.add('loaded');
+            observer.unobserve(img); // Para de observar após carregar
+          }
+        });
+      }, {
+        rootMargin: '100px' // Começa a carregar um pouco antes de aparecer
+      });
+
+      observer.observe(target);
+    };
+
+    // Carregar as imagens dinamicamente
+    fetch('data.json')
+      .then(response => response.json())
+      .then(data => {
+        const imgsContainer = document.getElementById('imgs');
+
+        data.forEach(item => {
+          const col = document.createElement('div');
+          col.classList.add('col-6', 'col-md-3', 'text-center', 'd-flex', 'align-items-center', 'justify-content-center');
+
+          const img = document.createElement('img');
+          img.dataset.src = Object.values(item)[0]; // caminho principal
+
+          // Se você quiser srcset, aqui é onde você define
+          // img.dataset.srcset = "small.jpg 600w, medium.jpg 1200w, large.jpg 1800w";
+
+          img.alt = Object.keys(item)[0];
+          img.classList.add('img-fluid', 'rounded', 'lazy');
+
+          col.appendChild(img);
+          imgsContainer.appendChild(col);
+
+          lazyLoad(img); // Aplica o IntersectionObserver para cada imagem
+        });
+      })
+      .catch(err => console.error('Erro ao carregar imagens:', err));
+  </script>
+
+  <!-- Bootstrap Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
+
+</body>
+</html>
